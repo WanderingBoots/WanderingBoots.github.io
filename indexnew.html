@@ -27,6 +27,7 @@
 
 </head>
 <body class="forum posts default" id="sXc7aebia4zujuxmHweSYBYdGpApanvryTld84t4Gdk=">
+
 	<div id="overlay">
 		<div id="litbox"></div>
 	</div>
@@ -85,7 +86,7 @@
 					<div id="post2328966" class="post odd ">
 						<div class="post-header">
 							<h3>
-								<a class="member " href=""><iframe src="wanderingboots.github.io/index.html" width="510" height="510"></iframe></a><p class="rank">This is a rank placeholder</p>
+								<a class="member " href="" onload="startup()"><iframe src="wanderingboots.github.io/index.html" width="510" height="510"></iframe></a><p class="rank">This is a rank placeholder</p>
 							</h3>
 							<ul class="badges"><li><img src="https://ssl-forum-files.fobby.net/forum_attachments/0048/7315/k.png" alt="Testing badge"></img></li></ul>
 						</div><!-- .post-header -->
@@ -124,4 +125,36 @@
 		</div><!--- content -->
 	</div> <!--- container --->
  </body>   
-</html>
+
+ <script>
+        // global state
+        var listenerAdded = false;
+        var frames = {};
+        
+        // initialization of each frame and the global listener
+        function startup() {
+            // add the postmessage listener
+            if (!listenerAdded) {
+                window.addEventListener(
+                    "message",
+                    (event) => {
+                        // if (event.origin !== "https://forum.starmen.net/") return;
+                        alert(event.data);
+                    },
+                    false,
+                );
+                listenerAdded = true;
+            }
+            // register the new iframe(s)
+            for(const frame of document.getElementsByClassName("myframe")) {
+                if (frame.id == "") {
+                    // TODO: this would use post ID maybe?
+                    let new_id = Math.floor(Math.random() * 65535);
+                    frames[new_id] = frame;
+                    frame.id = new_id.toString();
+                    frame.contentWindow.postMessage("REGISTER " + new_id.toString(), "*");
+                }
+            }
+        }
+    </script>
+ </html>
