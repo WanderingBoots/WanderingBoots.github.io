@@ -14,6 +14,7 @@ function doHello(frame, messageContent) {
 
     const profile = document.getElementById("profile");
     const username = profile !== null ? profile.innerText.trim() : null;
+	const iframeheight = post.getElementsByClassName('member')[0].childNodes[0].height
 
     // TODO: this gets the parent post's badges, not the user's badges
     const badgeElems = post.getElementsByClassName("badges");
@@ -24,6 +25,7 @@ function doHello(frame, messageContent) {
         bgcolor: bgcolor,
         postid: postid,
         username: username,
+		iframeheight: iframeheight,
     };
     return {message: "hello", content: pageInfo};
 }
