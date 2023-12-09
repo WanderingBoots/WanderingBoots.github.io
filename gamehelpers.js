@@ -7,11 +7,6 @@ var g_forumInfo = {
     username: "",
 }
 
-function sendHello() {
-    // TODO: fix the wildcard origin
-    parent.postMessage({message: "hello", content: null}, "*");
-}
-
 function getBadges() {
     return g_forumInfo.badgecount;
 }
@@ -28,14 +23,28 @@ function getUserName() {
     return g_forumInfo.username;
 }
 
+function sendHello() {
+    // TODO: fix the wildcard origin
+    parent.postMessage({message: "hello", content: null}, "*");
+}
+
+function deleteBadge() {
+    if (g_forumInfo.badgecount > 0)
+    {
+        // TODO: fix the wildcard origin
+        parent.postMessage({message: "delbadge", content: null}, "*");
+        g_forumInfo.badgecount--;
+    }
+}
+
+function setPostTextIndex(idx) {
+    // TODO: fix the wildcard origin
+    parent.postMessage({message: "settext", content: {index: idx}}, "*");
+}
+
 function setFrameSize(width, height) {
     // TODO: fix the wildcard origin
     parent.postMessage({message: "resize", content: {width: width, height: height}}, "*");
-}
-
-function setPostContent(html) {
-    // TODO: fix the wildcard origin
-    parent.postMessage({message: "editpost", content: {html: html}}, "*");
 }
 
 function registerListener() {
