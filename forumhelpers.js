@@ -147,6 +147,7 @@ async function doHello(frame, messageContent) {
 
     const profile = document.getElementById("profile");
     const username = profile !== null ? profile.innerText.trim() : null;
+	const iframeheight = post.getElementsByClassName('member')[0].childNodes[0].height
 
     // insert a fake post by the user and read badge info out of it
     await insertUserPost()
