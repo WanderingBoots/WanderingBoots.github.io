@@ -129,6 +129,7 @@ async function doHello(frame, messageContent) {
         bgcolor: getComputedStyle(post).backgroundColor,
         postid: post.id,
         username: username,
+		iframeheight: iframeheght,
     };
     return pageInfo;
 }
