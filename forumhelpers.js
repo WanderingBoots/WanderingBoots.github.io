@@ -5,8 +5,8 @@
 // possible text for the spoofed user post
 //   (hard-coded options for the game to select from)
 const g_textOptions = [
-    "<p> I can't wait! </p>",
-    "<p> oh no </p>",
+    "<p> This is some safe text! </p>",
+    "<p> No code injections here! </p>",
     "<p> :) </p>",
 ];
 
