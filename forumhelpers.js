@@ -123,7 +123,7 @@ async function doHello(frame, messageContent) {
     const post = getPostElementOfFrame(frame);
     const profile = document.getElementById("profile");
     const username = profile !== null ? profile.innerText.trim() : null;
-	const iframeheight = post.getElementsByClassName('member')[0].childNodes[0].height
+	const iframeheight = frame.height;
 
     const pageInfo = {
         badgecount: badgeElems.length,
