@@ -2,6 +2,10 @@
 // utility functions
 //
 
+// expected origin/target domain for game messages
+// TODO: replace with production itch.io domain
+const g_gameOrigin = "https://wanderingboots.github.io";
+
 // the spoofed user post element
 let g_spoofedPost = null;
 
@@ -46,21 +50,18 @@ async function fetchLastPostByUser(profileURL) {
     const recentsHTML = await fetchForumURL(profileURL + "/posts");
     if (recentsHTML !== null) {
         const parser = new DOMParser();
-        const threadURL = parser
+        const postURL = parser
             .parseFromString(recentsHTML, "text/html")
             .getElementsByTagName("tr")[1]
             .getElementsByTagName("a")[0].href;
-        const threadHTML = await fetchForumURL(threadURL);
+        const threadHTML = await fetchForumURL(postURL);
 
         if (threadHTML !== null) {
-            // find the user's post in the thread page
             const otherThread = parser.parseFromString(threadHTML, "text/html");
-            for (const post of otherThread.getElementsByClassName("post")) {
-                const profile = post.getElementsByClassName("member")[0].href;
-                const name = profile.slice(profile.lastIndexOf("/"));
-                if (profileURL.endsWith(name)) {
-                    return post.cloneNode(true);
-                }
+            const postId = postURL.split("/").reverse()[0];
+            const post = otherThread.getElementById(`post${postId}`);
+            if (post !== null) {
+                return post.cloneNode(true);
             }
         }
     }
@@ -93,7 +94,9 @@ async function findPostsByCurrentUser() {
         }
         // track the spoofed post along with the real ones
         //   (invisible until inserted into the page later)
-        g_userPosts.splice(0, 0, g_spoofedPost);
+        if (g_spoofedPost !== null) {
+            g_userPosts.splice(0, 0, g_spoofedPost);
+        }
     }
 }
 
@@ -201,10 +204,10 @@ async function doSetText(frame, messageContent) {
 }
 
 async function doShakeStart(frame, messageContent) {
+    // there is probably a better way to do this...
     for (const elem of document.getElementsByTagName("*")) {
         elem.classList.add("shake");
     }
-	 // TODO: there is probably a better way to do this...
     for (const anim of document.getAnimations()) {
         anim.playbackRate = messageContent.intensity;
     }
@@ -217,8 +220,9 @@ async function doShakeStop(frame, messageContent) {
 }
 
 async function messageHandler(event) {
-    // if (event.origin !== "https://forum.starmen.net/") return;
-    console.log(event.data);
+    // TODO: comment out logging
+    console.log(event);
+    if (event.origin !== g_gameOrigin) return;
 
     // each command handler uses the same function prototype
     const messageTypes = {
@@ -239,8 +243,8 @@ async function messageHandler(event) {
                 .then((response) => {
                     if (typeof response !== "undefined" && response !== null) {
                         // responses echo the command name that was sent
-                        // TODO: fix the wildcard origin
-                        event.source.postMessage({ message: event.data.message, content: response }, "*");
+                        event.source.postMessage({message: event.data.message, content: response },
+                            g_gameOrigin);
                     }
                 });
             break;
