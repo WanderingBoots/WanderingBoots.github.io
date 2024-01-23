@@ -14,9 +14,9 @@ let g_userPosts = [];
 
 // possible text for the spoofed user post
 const g_textOptions = [
-    "<p> I can't wait! </p>",
-    "<p> oh no </p>",
-    "<p> :) </p>",
+    "<p> Hey guys! Are you tired of doing everything alone? Is it a burden to have to wait until you think of something original to say before you can participate in a conversation? Well have I got the solution for you! With the power of my new friend, you too will be able to engage in a conversation without spending any effort! Contact me now for an exclusive deal to supercharge your forum posts with my premium advanced conversational strategy toolkit. You already give so much of your data away for free, wouldn't it be nice to get something in return? Imagine being able to have your account always be the first one to reply to any topic with such insightful remarks like 'GREAT JOB' or 'COOL', showcasing to all your friends how engaged and thoughtful you are of other people's input. Never worry about missing a message from your friends with my built-in auto-reply function. Just hand over the data and we'll take care of the rest. You heard it from me friends, you do not want to miss out on this amazing way to boost your post numbers and get more eyes on you. With my enhanced-posting strategies, you will be the talk of the virtual town! There will also be a unique and cool 30-60% chance your post will contain a sponsered link to another exciting and useful purchase opportunity, which will delight and engage anyone who reads your post, possibly giving you a boost in your metrics. Don't wait, sign up now!</p>",
+    "<p> Hey guys! I can't wait to show you all this cool new game I found! Imagine all the coolest games ever made all averaged into one expansive, all-inclusive experience. I'm so happy to tell everyone about smilequest, the newest game from a very talented game developper I just discovered. It's a 3D open world, hand animated pixel art retro gorgeous anime trading card game with first person hero shooter crafting survival mechanics, all featured a player-focused narrative where your choices really matter! There's a co-op mode where you can win cool skins and participate in a battle royale competitive multiplayer game world that's full of unique and memorable weapons. All this and more is made possible by the new technology the powers this game, and I can't wait to spread it all to you! If you're also ready to become a part of this new horizon for video gaming, please get in touch with me and provide just a few personal details so we can get you started. Thank you all!</p>",
+    "<p> This game made me :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) :) error error error error error</p>",
 ];
 
 // CSS defining a "shake" animation
@@ -50,65 +50,23 @@ async function fetchLastPostByUser(profileURL) {
     const recentsHTML = await fetchForumURL(profileURL + "/posts");
     if (recentsHTML !== null) {
         const parser = new DOMParser();
-        const postURL = parser
-            .parseFromString(recentsHTML, "text/html")
-            .getElementsByTagName("tr")[1]
-            .getElementsByTagName("a")[0].href;
-        const threadHTML = await fetchForumURL(postURL);
-
-        if (threadHTML !== null) {
-            const otherThread = parser.parseFromString(threadHTML, "text/html");
-            const postId = postURL.split("/").reverse()[0];
-            const post = otherThread.getElementById(`post${postId}`);
-            if (post !== null) {
-                return post.cloneNode(true);
+        // first row of table is column headers
+        const postRows = parser.parseFromString(recentsHTML, "text/html")
+                               .getElementsByTagName("tr");
+        if (postRows.length > 1) {
+            const postURL = postRows[1].getElementsByTagName("a")[0].href;
+            const threadHTML = await fetchForumURL(postURL);
+            if (threadHTML !== null) {
+                const otherThread = parser.parseFromString(threadHTML, "text/html");
+                const postId = postURL.split("/").reverse()[0];
+                const post = otherThread.getElementById(`post${postId}`);
+                if (post !== null) {
+                    return post.cloneNode(true);
+                }
             }
         }
     }
     return null;
-}
-
-async function findPostsByCurrentUser() {
-    const profileElem = document.getElementById("profile");
-    if (profileElem !== null) {
-        const currentProfile = profileElem.getElementsByTagName("a")[0].href;
-
-        g_userPosts = [];
-        for (const post of document.getElementsByClassName("post")) {
-            const otherProfile = post.getElementsByClassName("member")[0].href;
-            if (otherProfile == currentProfile) {
-                g_userPosts.push(post);
-            }
-        }
-        // if the user has no posts on this page, we have to find an exemplar
-        //   (quick-reply is technically a post element, but ignore it here)
-        if (g_userPosts.length == 0 || g_userPosts[0].classList.contains("quick")) {
-            const newPost = await fetchLastPostByUser(currentProfile);
-            if (newPost !== null) {
-                g_spoofedPost = newPost;
-            }
-        }
-        // otherwise just clone the first post we found
-        else {
-            g_spoofedPost = g_userPosts[0].cloneNode(true);
-        }
-        // track the spoofed post along with the real ones
-        //   (invisible until inserted into the page later)
-        if (g_spoofedPost !== null) {
-            g_userPosts.splice(0, 0, g_spoofedPost);
-        }
-    }
-}
-
-function getUserBadges() {
-    let badges = []
-    if (g_spoofedPost !== null) {
-        for (const badge of g_spoofedPost.getElementsByClassName("badges")[0].children) {
-            const src = badge.getElementsByTagName("img")[0].src;
-            badges.push(src.split("/").reverse()[0]);
-        }
-    }
-    return badges;
 }
 
 //
@@ -119,26 +77,103 @@ function getUserBadges() {
 //
 
 async function doHello(frame, messageContent) {
+    // in case of repeat "hello" messages
+    g_userPosts = [];
+    g_spoofedPost = null;
+
+    const post = frame.parentElement.parentElement.parentElement.parentElement; // gross, I know
+    const profileElem = document.getElementById("profile");
+
     // inject shake animation CSS as a <style> tag
     const style = document.createElement("style");
     style.innerHTML = g_shakeAnimation;
     document.head.appendChild(style);
 
-    await findPostsByCurrentUser();
-
-    const badges = getUserBadges();
-    const post = frame.parentElement.parentElement.parentElement.parentElement; // gross, I know
-    const profile = document.getElementById("profile");
-    const username = profile !== null ? profile.innerText.trim() : null;
-
-    const pageInfo = {
-        badges: badges,
+    // initialize info message
+    let pageInfo = {
+        badges: [],
         bgcolor: getComputedStyle(post).backgroundColor,
         frameheight: frame.height,
         postid: post.id,
-        username: username,
-        weezer: badges.includes("Weezerfestbadge.png"),
-    };
+        username: null,
+        userposted: false,
+        weezer: false,
+    }
+
+    // if no user is logged in, use a boots post for later fourth-wall silliness
+    //   (unless something goes horribly wrong, boots has a post history)
+    if (profileElem == null) {
+        g_spoofedPost = await fetchLastPostByUser("https://forum.starmen.net/members/Amstrauz");
+        return pageInfo;
+    }
+
+    // otherwise, grab the logged-in user's name and try to find a post of theirs to spoof
+    pageInfo.username = profileElem.innerText.trim();
+
+    const currentProfile = profileElem.getElementsByTagName("a")[0].href;
+    for (const post of document.getElementsByClassName("post")) {
+        const otherProfile = post.getElementsByClassName("member")[0].href;
+        if (otherProfile == currentProfile) {
+            g_userPosts.push(post);
+        }
+    }
+    // if the user has posted on the current page, just clone the first one
+    if (g_userPosts.length > 0 && !g_userPosts[0].classList.contains("quick")) {
+        g_spoofedPost = g_userPosts[0].cloneNode(true);
+        pageInfo.userposted = true;
+    }
+    // otherwise we have to find an exemplar post
+    else {
+        const newPost = await fetchLastPostByUser(currentProfile);
+        if (newPost !== null) {
+            g_spoofedPost = newPost;
+            pageInfo.userposted = true;
+        }
+    }
+    // if we found a post to spoof, track it and enumerate the user's badges
+    if (g_spoofedPost !== null) {
+        g_userPosts.splice(0, 0, g_spoofedPost);
+        if (g_spoofedPost.getElementsByClassName("badges").length > 0) {
+            for (const badge of g_spoofedPost.getElementsByClassName("badges")[0].children) {
+                const src = badge.getElementsByTagName("img")[0].src;
+                const badgeName = src.split("/").reverse()[0];
+                pageInfo.badges.push(badgeName);
+                if (badgeName == "Weezerfestbadge.png") {
+                    pageInfo.weezer = true;
+                }
+            }
+        }
+    }
+    // if not, construct one by cloning/modifying the OP to have the user's name and sprite
+    //  (we're assuming here that a user with no posts will also have no badges and no avatar)
+    else {
+        const op = document.getElementsByClassName("post")[0];
+        g_spoofedPost = op.cloneNode(true);
+
+        // debug userscript adds a button we don't want
+        for (const buttonElem of g_spoofedPost.getElementsByTagName("button")) {
+            buttonElem.remove();
+        }
+        
+        // pull the sprite and username from the topbar profile element
+        const header = g_spoofedPost.getElementsByClassName("post-header")[0];
+        header.getElementsByTagName("h3")[0].innerHTML = profileElem.innerHTML;
+        header.querySelector("#logoutform").remove();
+
+        // user sprites are scaled weird in the topbar, so fix it
+        if (header.getElementsByTagName("img").length == 1) {
+            header.getElementsByTagName("img")[0].removeAttribute("style");
+        }
+
+        // remove any badges or signatures from the copied post
+        for (const badgeElem of g_spoofedPost.getElementsByClassName("badges")) {
+            badgeElem.remove();
+        }
+        for (const sigElem of g_spoofedPost.getElementsByClassName("sig")) {
+            sigElem.remove();
+        }
+    }
+
     return pageInfo;
 }
 
@@ -149,7 +184,7 @@ async function doResize(frame, messageContent) {
 
 async function doDeleteBadge(frame, messageContent) {
     for (const post of g_userPosts) {
-        for (let badge of post.getElementsByClassName("badges")[0].children) {
+        for (const badge of post.getElementsByClassName("badges")[0].children) {
             const src = badge.getElementsByTagName("img")[0].src;
             if (src.endsWith(messageContent.name)) {
                 badge.remove();
@@ -172,11 +207,21 @@ async function doDummyPost(frame, messageContent) {
         // replace the message-content with an initial value
         g_spoofedPost.getElementsByClassName("message-content")[0].innerHTML = g_textOptions[0];
 
+        // remove any attachments that were part of the original post
+        for (const attachElem of g_spoofedPost.getElementsByClassName("attachments")) {
+            attachElem.remove();
+        }
+
         // strip the links out of the edit/quote/report/etc buttons
         const utils = g_spoofedPost.getElementsByClassName("utils")[0];
         for (const elem of utils.getElementsByTagName("a")) {
             elem.href = "#";
         }
+
+        // update the post timestamp
+        const timeElem = g_spoofedPost.getElementsByClassName("changeabletime")[0];
+        timeElem.innerText = "less than a minute ago";
+        timeElem.title = new Date().toLocaleString("en-US", {dateStyle: "long", timeStyle: "short"});
 
         // insert the faked user post as a reply to the OP
         const op = document.getElementsByClassName("post")[0];
@@ -238,16 +283,24 @@ async function messageHandler(event) {
     // locate the iframe source
     for (const iframe of document.getElementsByTagName("iframe")) {
         if (iframe.contentWindow == event.source) {
-            // call the command handler
-            messageTypes[event.data.message](iframe, event.data.content)
-                .then((response) => {
-                    if (typeof response !== "undefined" && response !== null) {
-                        // responses echo the command name that was sent
-                        event.source.postMessage({message: event.data.message, content: response },
-                            g_gameOrigin);
-                    }
-                });
-            break;
+            try {
+                // call the command handler
+                messageTypes[event.data.message](iframe, event.data.content)
+                    .then((response) => {
+                        if (typeof response !== "undefined" && response !== null) {
+                            // responses echo the command name that was sent
+                            event.source.postMessage({message: event.data.message, content: response },
+                                g_gameOrigin);
+                        }
+                    });
+            }
+            catch (err) {
+                // if we get here, there's a bug or someone is meddling with browser dev tools
+                console.error(err);
+            }
+            finally {
+                break;
+            }
         }
     }
 }
