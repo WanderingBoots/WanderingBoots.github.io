@@ -1,9 +1,8 @@
 //
-// utility functions
+// utility
 //
 
 // expected origin/target domain for game messages
-// TODO: replace with production itch.io domain
 const g_gameOrigin = "https://wanderingboots.github.io";
 
 // the spoofed user post element
@@ -94,6 +93,7 @@ async function doHello(frame, messageContent) {
         badges: [],
         bgcolor: getComputedStyle(post).backgroundColor,
         frameheight: frame.height,
+        hiddenbadges: [],  // not actually tracked here
         postid: post.id,
         username: null,
         userposted: false,
@@ -104,6 +104,11 @@ async function doHello(frame, messageContent) {
     //   (unless something goes horribly wrong, boots has a post history)
     if (profileElem == null) {
         g_spoofedPost = await fetchLastPostByUser("https://forum.starmen.net/members/Amstrauz");
+        // swap the avatar for a specific one
+        g_spoofedPost.getElementsByClassName("member")[0]
+            .getElementsByTagName("img")[0]
+            .src = "https://ssl-forum-files.fobby.net/forum_attachments/0047/6512/BootsAvvieGif.gif";
+
         return pageInfo;
     }
 
@@ -135,8 +140,7 @@ async function doHello(frame, messageContent) {
         g_userPosts.splice(0, 0, g_spoofedPost);
         if (g_spoofedPost.getElementsByClassName("badges").length > 0) {
             for (const badge of g_spoofedPost.getElementsByClassName("badges")[0].children) {
-                const src = badge.getElementsByTagName("img")[0].src;
-                const badgeName = src.split("/").reverse()[0];
+                const badgeName = badge.getElementsByTagName("img")[0].src.split("/").reverse()[0];
                 pageInfo.badges.push(badgeName);
                 if (badgeName == "Weezerfestbadge.png") {
                     pageInfo.weezer = true;
@@ -161,8 +165,8 @@ async function doHello(frame, messageContent) {
         header.querySelector("#logoutform").remove();
 
         // user sprites are scaled weird in the topbar, so fix it
-        if (header.getElementsByTagName("img").length == 1) {
-            header.getElementsByTagName("img")[0].removeAttribute("style");
+        if (header.getElementsByClassName("sprite").length == 1) {
+            header.getElementsByClassName("sprite")[0].removeAttribute("style");
         }
 
         // remove any badges or signatures from the copied post
@@ -187,9 +191,24 @@ async function doDeleteBadge(frame, messageContent) {
         for (const badge of post.getElementsByClassName("badges")[0].children) {
             const src = badge.getElementsByTagName("img")[0].src;
             if (src.endsWith(messageContent.name)) {
-                badge.remove();
+                // hidden badges can be restored later (all at once)
+                if (messageContent.hide) {
+                    badge.hidden = true;
+                }
+                else {
+                    badge.remove();
+                }
                 break;
             }
+        }
+    }
+}
+
+async function doRestoreBadges(frame, messageContent) {
+    // un-hides any previously hidden badges
+    for (const post of g_userPosts) {
+        for (const badge of post.getElementsByClassName("badges")[0].children) {
+            badge.hidden = false;
         }
     }
 }
@@ -202,6 +221,7 @@ async function doDummyPost(frame, messageContent) {
 
         // assign "post even" to the post - post is inserted right after the OP
         //   also assign "avsdoda" so it's faster/easier to find again
+        g_spoofedPost.classList = [];
         g_spoofedPost.classList.add("post", "even", "avsdoda");
 
         // replace the message-content with an initial value
@@ -265,8 +285,7 @@ async function doShakeStop(frame, messageContent) {
 }
 
 async function messageHandler(event) {
-    // TODO: comment out logging
-    console.log(event);
+    // console.log(event);
     if (event.origin !== g_gameOrigin) return;
 
     // each command handler uses the same function prototype
@@ -275,6 +294,7 @@ async function messageHandler(event) {
         delbadge: doDeleteBadge,
         dummypost: doDummyPost,
         resize: doResize,
+        restorebadges: doRestoreBadges,
         settext: doSetText,
         shakestart: doShakeStart,
         shakestop: doShakeStop,
